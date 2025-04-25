@@ -1,0 +1,29 @@
+select * from customer1 c 
+
+select * from order1 o 
+
+-- Analyze Customer Purchase Behavior by Region
+--To analyze customer spending patterns and identify
+--the most valuable customers in each region based on their 
+--purchasing activity in the last 12 months.
+
+--identifies the top 3 customers per region who have made more than 3 purchases in the last 12 months.
+
+with recent_orders as(
+select 
+	c."name",
+	c.region,
+	sum(o.total_amount) as total_Amount,
+	count(*) as order_count
+from order1 o 
+join customer1 c on o.customer_id = c.customer_id
+where o.order_date >= current_date - interval '1 year'
+group by c.customer_id,name,c.region
+having count(*)>=3)
+select * from(
+	select name,region,total_amount,order_count,
+	row_number() over(partition by region order by total_amount desc) as rank
+	from recent_orders
+) ranked 
+where rank <= 3
+order by region,rank;
